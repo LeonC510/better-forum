@@ -1,4 +1,4 @@
-// Forum Grading Helper — settings bridge (isolated world, document_start).
+// Better Forum — settings bridge (isolated world, document_start).
 // The popup stores settings in chrome.storage.local, which page-world scripts
 // cannot read; mirror them onto <html data-fgh-…> so every script (either
 // world) reads them synchronously and reacts to changes.

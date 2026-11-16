@@ -1,4 +1,4 @@
-// Forum Grading Helper — Forum's main app (isolated world, document_start).
+// Better Forum — Forum's main app (isolated world, document_start).
 //
 // The main app is a single-page app, so this script is injected on every
 // /app/* page and decides what to do from location.pathname:

@@ -17,7 +17,7 @@ function boot(stored) {
   const win = dom.window;
   const writes = [];
   win.chrome = {
-    runtime: { getManifest: () => ({ name: 'Forum Grading Helper', version: '9.9.9' }) },
+    runtime: { getManifest: () => ({ name: 'Better Forum', version: '9.9.9' }) },
     storage: {
       local: {
         get: (defaults, cb) => { cb(Object.assign({}, defaults, stored)); },
@@ -31,7 +31,7 @@ function boot(stored) {
 
 test('shows the manifest name and version', () => {
   const { doc } = boot({});
-  assert.equal(doc.getElementById('name').textContent, 'Forum Grading Helper');
+  assert.equal(doc.getElementById('name').textContent, 'Better Forum');
   assert.equal(doc.getElementById('version').textContent, '9.9.9');
 });
 

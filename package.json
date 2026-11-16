@@ -1,13 +1,13 @@
 {
-  "name": "forum-grading-helper",
-  "version": "0.5.7",
+  "name": "better-forum",
+  "version": "0.6.0",
   "private": true,
-  "description": "Better Forum grading experience.",
+  "description": "A better Forum experience for grading and submitting assignments.",
   "scripts": {
     "test": "node --test \"test/**/*.test.js\"",
     "replay": "node test/replay/run.js",
     "icons": "node scripts/render-icons.js",
-    "zip": "V=$(node -p 'require(\"./extension/manifest.json\").version') && cd extension && zip -qr \"../forum-grading-helper-$V.zip\" . -x '.DS_Store' '*/.DS_Store' && echo \"wrote forum-grading-helper-$V.zip\""
+    "zip": "V=$(node -p 'require(\"./extension/manifest.json\").version') && cd extension && zip -qr \"../better-forum-$V.zip\" . -x '.DS_Store' '*/.DS_Store' && echo \"wrote better-forum-$V.zip\""
   },
   "devDependencies": {
     "@reduxjs/toolkit": "^2.12.0",

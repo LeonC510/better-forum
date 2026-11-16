@@ -1,7 +1,9 @@
-# Forum Grading Helper
+# Better Forum
 
-Chrome extension (Manifest V3) for professors and TAs grading on
-[Forum](https://forum.minerva.edu/).
+Chrome extension (Manifest V3) that improves
+[Forum](https://forum.minerva.edu/) for professors and TAs who grade on it
+and for students who submit assignments on it. (Formerly *Forum Grading
+Helper*; internal identifiers keep the `fgh` prefix.)
 
 * **Random, persistent student order** in Class Poll / Video / Workbooks
   scoring and in Assignment Grading. Each class session (course / section /

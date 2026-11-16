@@ -65,5 +65,5 @@ can be unticked to upload only.
 
 ### Manual fallback
 
-`npm run zip` produces `forum-grading-helper-<version>.zip` for uploading in
+`npm run zip` produces `better-forum-<version>.zip` for uploading in
 the developer dashboard by hand.

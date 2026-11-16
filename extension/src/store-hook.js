@@ -1,4 +1,4 @@
-// Forum Grading Helper — Redux store hook for the class grader (MAIN world).
+// Better Forum — Redux store hook for the class grader (MAIN world).
 //
 // Forum's class grader builds its store with Redux Toolkit's configureStore()
 // and leaves `devTools` at its default (true), so RTK reads
@@ -51,7 +51,7 @@
       const ids = slice && slice.data && slice.data.ids;
       if (Array.isArray(ids) && ids.length) {
         let order = null;
-        try { order = slices[name](ids); } catch (e) { console.error('[Forum Grading Helper]', e); }
+        try { order = slices[name](ids); } catch (e) { console.error('[Better Forum]', e); }
         if (Array.isArray(order)) {
           order = normalize(order, ids);
           if (!sameOrder(order, ids)) {
@@ -114,7 +114,7 @@
         const replaceReducer = store.replaceReducer;
         store.replaceReducer = function (r) { return replaceReducer.call(store, wrap(r)); };
         for (const listener of storeListeners) {
-          try { listener(store); } catch (e) { console.error('[Forum Grading Helper]', e); }
+          try { listener(store); } catch (e) { console.error('[Better Forum]', e); }
         }
         return store;
       };

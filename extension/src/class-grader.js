@@ -1,4 +1,4 @@
-// Forum Grading Helper — class grader (Polls / Video / Workbooks tabs).
+// Better Forum — class grader (Polls / Video / Workbooks tabs).
 // Runs in the page's MAIN world at document_start so the Redux hook is in
 // place before Forum's class_grader bundle creates its store.
 //
@@ -28,7 +28,7 @@
   const KEY_USERS = 'fgh:order:class:' + sessionKey + ':users';
   const KEY_GROUPS = 'fgh:order:class:' + sessionKey + ':groups';
   const GROUP_SLICES = ['assignmentGroup', 'breakoutGroup'];
-  const TAG = '[Forum Grading Helper]';
+  const TAG = '[Better Forum]';
 
   let store = null;
   let version = 0;

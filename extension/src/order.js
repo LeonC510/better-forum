@@ -1,4 +1,4 @@
-// Forum Grading Helper — pure helpers shared by both content scripts.
+// Better Forum — pure helpers shared by both content scripts.
 // Plain script (no modules) so it can be listed before the other content
 // scripts in manifest.json; also exports for the Node test-suite.
 (function (root) {
