@@ -41,3 +41,23 @@ h2:has(> .fgh-shuffle) {
 .fgh-blind-primary .svg-icon.grade-blind {
   filter: brightness(0) invert(1);
 }
+
+/* Assignment submission: the upload buttons also take a dropped file (see
+   main-app.js). Second line inside the button, one step down Forum's type
+   scale (the size/line-height of its small buttons), same family and colour.
+   A pseudo-element, so it survives React re-rendering the button text. */
+.submission-options-list button.add-primary-file::after,
+.submission-options-list button.add-secondary-file::after {
+  content: "Or drop a file here";
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.4285714286;
+  font-weight: normal;
+}
+
+/* A file is being dragged over the button: Forum's own hover look for these
+   buttons (.button-secondary:hover:enabled), eased by the button's own
+   transition. */
+.submission-options-list button.fgh-drop-over:enabled {
+  background-color: var(--black-tint-95);
+}

@@ -11,6 +11,11 @@
 //                           order by default" is on in the popup; off, only an
 //                           order shuffled by hand applies); Prev/Next follow
 //                           it; "Shuffle Order" button
+//   * assignment submission (students; any page showing the upload buttons)
+//                         → a file dropped on "Upload File" / "Upload Primary
+//                           File" / "Upload Secondary File" is handed to that
+//                           button's own file input, so Forum's handler checks
+//                           and uploads it exactly as if it had been picked
 // All DOM edits happen in a MutationObserver callback (a microtask that runs
 // after the app commits and before the browser paints), so nothing flickers.
 (function (root) {
@@ -21,7 +26,15 @@
   const doc = root.document;
 
   // Small seam for tests (jsdom cannot navigate).
-  const api = { navigate: function (url) { root.location.assign(url); } };
+  const api = {
+    navigate: function (url) { root.location.assign(url); },
+    // Put one File into a file input (jsdom has no DataTransfer).
+    setInputFile: function (input, file) {
+      const dt = new root.DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+    },
+  };
   root.__forumGradingHelperMainApp = api;
 
   const ROUTES = [
@@ -257,6 +270,66 @@
       }
     }
   }, true);
+
+  // ------------------------------------------------- assignment submission: drop
+
+  // The upload buttons only click a hidden <input type="file"> next to them
+  // (same <li>); Forum's React onChange on that input takes files[0], checks
+  // its extension, uploads and reports errors. A drop does the same through
+  // that input, so none of those rules are duplicated here. One file only,
+  // like the picker (the input has no "multiple").
+  const DROP_BUTTONS = '.submission-options-list button.add-primary-file, .submission-options-list button.add-secondary-file';
+  const DROP_OVER = 'fgh-drop-over';
+
+  function dropButton(e) {
+    const t = e.target && e.target.nodeType === 1 ? e.target : e.target && e.target.parentElement;
+    return t && typeof t.closest === 'function' ? t.closest(DROP_BUTTONS) : null;
+  }
+
+  // How many files the drag carries (0 when it is not a file drag). While
+  // dragging, only `items` is populated; on drop, `files` is too.
+  function draggedFileCount(dt) {
+    if (!dt || !dt.types || Array.prototype.indexOf.call(dt.types, 'Files') < 0) return 0;
+    if (dt.items && dt.items.length) {
+      let n = 0;
+      for (const item of dt.items) if (item.kind === 'file') n++;
+      return n;
+    }
+    return dt.files && dt.files.length ? dt.files.length : 1; // count unknown: decide on drop
+  }
+
+  function onDragOver(e) {
+    const btn = dropButton(e);
+    if (!btn || btn.disabled || draggedFileCount(e.dataTransfer) !== 1) return;
+    e.preventDefault(); // marks the button as a drop target
+    e.dataTransfer.dropEffect = 'copy';
+    btn.classList.add(DROP_OVER);
+  }
+
+  function onDragLeave(e) {
+    const btn = dropButton(e);
+    if (btn && !(e.relatedTarget && btn.contains(e.relatedTarget))) btn.classList.remove(DROP_OVER);
+  }
+
+  function onDrop(e) {
+    const btn = dropButton(e);
+    if (!btn) return;
+    btn.classList.remove(DROP_OVER);
+    const dt = e.dataTransfer;
+    if (!draggedFileCount(dt)) return;
+    e.preventDefault(); // never let the browser open the file instead
+    if (btn.disabled || !dt.files || dt.files.length !== 1) return;
+    const li = btn.closest('li');
+    const input = li && li.querySelector('input[type="file"]');
+    if (!input) return;
+    api.setInputFile(input, dt.files[0]);
+    input.dispatchEvent(new root.Event('change', { bubbles: true }));
+  }
+
+  doc.addEventListener('dragenter', onDragOver, true);
+  doc.addEventListener('dragover', onDragOver, true);
+  doc.addEventListener('dragleave', onDragLeave, true);
+  doc.addEventListener('drop', onDrop, true);
 
   // Switching "Shuffle student order by default" from the popup takes effect
   // on the list on screen right away: forget that it was ordered and let

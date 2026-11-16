@@ -18,6 +18,9 @@ const PAGES = [
   { re: /^\/app\/courses\/\d+\/sections\/\d+\/classes\/105001\/review(\/\d+)?$/, file: 'Class Video Scoring Student.html' },
   { re: /^\/app\/courses\/\d+\/sections\/\d+\/classes\/\d+\/review(\/\d+)?$/, file: 'Class Poll Scoring.htm' },
   { re: /^\/app\/courses\/\d+\/sections\/\d+\/classes\/\d+$/, file: 'Class Assessment Page Entrance.html' },
+  // Student view of an assignment, upload options open (one file / primary + secondary).
+  { re: /^\/app\/assignments\/2491330$/, file: 'Assignment Submission Variant 1 Step 2.html' },
+  { re: /^\/app\/assignments\/2491477$/, file: 'Assignment Submission Variant 2 Step 2.html' },
   { re: /^\/app\/assignments\/\d+$/, file: 'Assignment Scoring Entrance.htm' },
   { re: /^\/app\/assignment-grader\/\d+(\/.*)?$/, file: 'Assignment Scoring.htm' },
 ];

@@ -128,6 +128,120 @@ test('assignment entrance: nothing changes when the plain button is absent (stud
   assert.ok(blind.classList.contains('icon-button-secondary'));
 });
 
+// ---------------------------------------------------- assignment submission: drop
+
+const fakeFile = (name) => ({ name: name, size: 3, type: '' });
+// What Chrome exposes: `items` while dragging, `files` as well on drop.
+const filesDT = (files) => ({ types: ['Files'], items: files.map(() => ({ kind: 'file' })), files: files, dropEffect: 'none' });
+const textDT = () => ({ types: ['text/plain'], items: [{ kind: 'string' }], files: [], dropEffect: 'none' });
+
+function fire(el, type, dataTransfer, extra) {
+  const e = new win.Event(type, { bubbles: true, cancelable: true });
+  e.dataTransfer = dataTransfer;
+  Object.assign(e, extra || {});
+  el.dispatchEvent(e);
+  return e;
+}
+
+// Shows a submission page and records what reaches Forum's file inputs.
+function submissionPage(fixture) {
+  goto('/app/assignments/2491477');
+  doc.querySelector('.main-region').innerHTML = FIX(fixture);
+  const got = [];
+  main.setInputFile = (input, file) => { input.__file = file; };
+  // React listens at its root container.
+  doc.querySelector('.submission-region').addEventListener('change', (e) => got.push([e.target.id, e.target.__file && e.target.__file.name]));
+  return got;
+}
+
+test('submission: the fixtures are the two real variants', () => {
+  submissionPage('assignment-submission-one-file.html');
+  assert.deepEqual([...doc.querySelectorAll('.submission-options-list button')].map((b) => b.textContent), ['Upload File']);
+  submissionPage('assignment-submission-two-files.html');
+  assert.deepEqual([...doc.querySelectorAll('.submission-options-list button')].map((b) => b.textContent), ['Upload Primary File', 'Upload Secondary File', 'Finalize']);
+});
+
+test('submission: a file dropped on "Upload File" goes to its input as a change event', () => {
+  const got = submissionPage('assignment-submission-one-file.html');
+  const e = fire(doc.querySelector('button.add-primary-file'), 'drop', filesDT([fakeFile('essay.pdf')]));
+  assert.equal(e.defaultPrevented, true);
+  assert.deepEqual(got, [['upload-primary', 'essay.pdf']]);
+});
+
+test('submission: primary and secondary buttons each feed their own input', () => {
+  const got = submissionPage('assignment-submission-two-files.html');
+  fire(doc.querySelector('button.add-secondary-file'), 'drop', filesDT([fakeFile('code.zip')]));
+  fire(doc.querySelector('button.add-primary-file'), 'drop', filesDT([fakeFile('essay.pdf')]));
+  assert.deepEqual(got, [['upload-secondary', 'code.zip'], ['upload-primary', 'essay.pdf']]);
+});
+
+test('submission: any file type is handed over (Forum does the type check)', () => {
+  const got = submissionPage('assignment-submission-one-file.html');
+  fire(doc.querySelector('button.add-primary-file'), 'drop', filesDT([fakeFile('notes.docx')]));
+  assert.deepEqual(got, [['upload-primary', 'notes.docx']]);
+});
+
+test('submission: dragging one file over a button highlights it and allows the drop', () => {
+  submissionPage('assignment-submission-two-files.html');
+  const btn = doc.querySelector('button.add-primary-file');
+  const other = doc.querySelector('button.add-secondary-file');
+  const dt = filesDT([fakeFile('essay.pdf')]);
+  assert.equal(fire(btn, 'dragenter', dt).defaultPrevented, true);
+  const over = fire(btn, 'dragover', dt);
+  assert.equal(over.defaultPrevented, true);
+  assert.equal(dt.dropEffect, 'copy');
+  assert.ok(btn.classList.contains('fgh-drop-over'));
+  assert.ok(!other.classList.contains('fgh-drop-over'));
+  fire(btn, 'dragleave', dt, { relatedTarget: doc.body });
+  assert.ok(!btn.classList.contains('fgh-drop-over'), 'leaving clears it');
+  fire(btn, 'dragover', dt);
+  fire(btn, 'drop', dt);
+  assert.ok(!btn.classList.contains('fgh-drop-over'), 'dropping clears it');
+});
+
+test('submission: several files are refused — no highlight, nothing uploaded', () => {
+  const got = submissionPage('assignment-submission-one-file.html');
+  const btn = doc.querySelector('button.add-primary-file');
+  const dt = filesDT([fakeFile('a.pdf'), fakeFile('b.pdf')]);
+  assert.equal(fire(btn, 'dragover', dt).defaultPrevented, false);
+  assert.ok(!btn.classList.contains('fgh-drop-over'));
+  const drop = fire(btn, 'drop', dt);
+  assert.equal(drop.defaultPrevented, true, 'the browser must not open the files either');
+  assert.deepEqual(got, []);
+});
+
+test('submission: a disabled button (upload in progress) takes no drop', () => {
+  const got = submissionPage('assignment-submission-one-file.html');
+  const btn = doc.querySelector('button.add-primary-file');
+  btn.disabled = true;
+  const dt = filesDT([fakeFile('essay.pdf')]);
+  assert.equal(fire(btn, 'dragover', dt).defaultPrevented, false);
+  assert.ok(!btn.classList.contains('fgh-drop-over'));
+  fire(btn, 'drop', dt);
+  assert.deepEqual(got, []);
+});
+
+test('submission: dragged text and drops elsewhere are not intercepted', () => {
+  const got = submissionPage('assignment-submission-two-files.html');
+  const btn = doc.querySelector('button.add-primary-file');
+  assert.equal(fire(btn, 'dragover', textDT()).defaultPrevented, false);
+  assert.equal(fire(btn, 'drop', textDT()).defaultPrevented, false);
+  const dt = filesDT([fakeFile('essay.pdf')]);
+  for (const el of [doc.querySelector('button.finalize-submission'), doc.querySelector('.submission-view h2')]) {
+    assert.equal(fire(el, 'dragover', dt).defaultPrevented, false);
+    assert.equal(fire(el, 'drop', dt).defaultPrevented, false);
+  }
+  assert.deepEqual(got, []);
+  assert.equal(doc.querySelectorAll('.fgh-drop-over').length, 0);
+});
+
+test('submission: shared.css labels both upload buttons and styles the drag highlight', () => {
+  const css = SRC('shared.css');
+  const rule = /\.submission-options-list button\.add-primary-file::after,\s*\.submission-options-list button\.add-secondary-file::after\s*\{[^}]*content:\s*"Or drop a file here"/;
+  assert.match(css, rule);
+  assert.match(css, /button\.fgh-drop-over:enabled\s*\{[^}]*background-color:\s*var\(--black-tint-95\)/);
+});
+
 // ------------------------------------------------------------- assignment grader
 
 const KEY = 'fgh:order:assignment:2491635';

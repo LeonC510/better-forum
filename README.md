@@ -25,6 +25,12 @@ Helper*; internal identifiers keep the `fgh` prefix.)
   session (comments alone don't count); in the assignment grader, once an
   outcome score is attached. Can be switched off in the popup.
 * **Comment boxes grow with your text** (never smaller than Forum's default).
+* **Drop a file to submit an assignment** (students): the *Upload File* /
+  *Upload Primary File* / *Upload Secondary File* buttons read *Or drop a file
+  here* on a second line and accept one dropped file. The file goes through
+  Forum's own upload handler, so its file-type check, messages and — where an
+  assignment takes a single file — automatic finalizing work exactly as when
+  you pick the file.
 * **Only when you are the grader**: students open the same class review page
   (the video tab, with its *Who* selector). Where Forum's capabilities for
   the class say you can't grade, the page is left untouched: Forum's order,
@@ -44,6 +50,9 @@ Requires Chrome 111+ (content scripts in the page's main world).
   URL and edits the entrance buttons / the assignment grader's *Who* list
   inside a `MutationObserver` callback (before paint, so nothing flickers).
   Prev/Next are re-routed through Forum's own dropdown handler.
+  File drops on the submission page's upload buttons are put into the hidden
+  file input next to the button, followed by a `change` event, which is all
+  Forum's picker does; the "Or drop a file here" line is a CSS `::after`.
 * `extension/src/class-grader.js` + `store-hook.js` — the class grader is a
   separate React/Redux-Toolkit app. We install a store enhancer through the
   `__REDUX_DEVTOOLS_EXTENSION_COMPOSE__` hook RTK consults, and re-order the
@@ -83,7 +92,8 @@ extension switched off, or strip what it injected (`fgh-*` markup, the
 those pages and the recorded API responses over a local HTTPS server mapped
 to forum.minerva.edu (`--host-resolver-rules`), loads the extension into the
 installed Google Chrome (headless; `FGH_HEADFUL=1` to watch) and checks the
-class grader end-to-end, the two entrance pages and the popup. The main app's
+class grader end-to-end, the two entrance pages, the two submission pages
+and the popup. The main app's
 bundles are fetched at runtime and are not part of the saved pages, so the
 assignment grader's Prev/Next (which go through Forum's own handler) are
 verified in `test/main-app.test.js` instead.

@@ -344,6 +344,58 @@ const groupDropdown = (page) => page.$$eval('#student-selector .dropdown .studen
     assert.ok(await page.$('h2 > button.fgh-shuffle'));
   });
 
+  // Student submission pages (static, like the grader above: Forum's upload
+  // handler does not boot, so we check what reaches its file input).
+  for (const [id, labels] of [['2491330', ['Upload File']], ['2491477', ['Upload Primary File', 'Upload Secondary File']]]) {
+    await check(`assignment submission ${id}: upload buttons say "Or drop a file here", highlight like hover, and pass a dropped file to their input`, async () => {
+      await page.goto('https://forum.minerva.edu/app/assignments/' + id, { waitUntil: 'domcontentloaded' });
+      const SEL = '.submission-options-list button.add-primary-file, .submission-options-list button.add-secondary-file';
+      await page.waitForSelector(SEL, { timeout: 30000 });
+      await sleep(1000);
+      const buttons = await page.$$(SEL);
+      assert.deepEqual(await Promise.all(buttons.map((b) => b.evaluate((e) => e.textContent))), labels, 'Forum\'s own text untouched');
+      for (const b of buttons) {
+        const look = await b.evaluate((e) => {
+          const a = getComputedStyle(e, '::after'); const own = getComputedStyle(e);
+          return { content: a.content, display: a.display, smaller: parseFloat(a.fontSize) < parseFloat(own.fontSize), sameFamily: a.fontFamily === own.fontFamily, sameColor: a.color === own.color, h: e.getBoundingClientRect().height };
+        });
+        assert.deepEqual({ ...look, h: 0 }, { content: '"Or drop a file here"', display: 'block', smaller: true, sameFamily: true, sameColor: true, h: 0 });
+        assert.ok(look.h > 50 && look.h < 70, 'two lines tall: ' + look.h);
+        const bg = () => b.evaluate((e) => getComputedStyle(e).backgroundColor);
+        const rest = await bg();
+        await b.hover(); await sleep(500);
+        const hover = await bg();
+        await page.mouse.move(0, 0); await sleep(500);
+        assert.equal(await bg(), rest);
+        assert.notEqual(hover, rest, 'hover changes the background');
+        // A real DragEvent carrying real Files, as Chrome delivers it.
+        const drag = (type, names) => b.evaluate((e, t, ns) => {
+          const dt = new DataTransfer();
+          for (const n of ns) dt.items.add(new File(['x'], n));
+          const ev = new DragEvent(t, { bubbles: true, cancelable: true, dataTransfer: dt });
+          e.dispatchEvent(ev);
+          return ev.defaultPrevented;
+        }, type, names);
+        assert.equal(await drag('dragover', ['essay.pdf']), true);
+        await sleep(500);
+        assert.equal(await bg(), hover, 'drag highlight is Forum\'s hover look');
+        await b.evaluate((e) => {
+          const input = e.closest('li').querySelector('input[type=file]');
+          window.__changes = [];
+          input.addEventListener('change', () => window.__changes.push([input.id, input.files.length, input.files[0].name]));
+        });
+        assert.equal(await drag('drop', ['essay.pdf']), true);
+        await sleep(500);
+        assert.equal(await bg(), rest, 'highlight gone after the drop');
+        const inputId = await b.evaluate((e) => e.closest('li').querySelector('input[type=file]').id);
+        assert.deepEqual(await page.evaluate(() => window.__changes), [[inputId, 1, 'essay.pdf']]);
+        assert.equal(await drag('dragover', ['a.pdf', 'b.pdf']), false, 'two files: not a drop target');
+        await drag('drop', ['a.pdf', 'b.pdf']);
+        assert.equal((await page.evaluate(() => window.__changes)).length, 1, 'two files: nothing handed over');
+      }
+    });
+  }
+
   await check('main app: no page errors', async () => {
     assert.deepEqual(errors, []);
   });
