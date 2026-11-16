@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Better Forum",
-  "version": "0.6.0",
-  "description": "A better Forum experience for grading and submitting assignments.",
+  "version": "0.6.1",
+  "description": "A better Forum experience.",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
